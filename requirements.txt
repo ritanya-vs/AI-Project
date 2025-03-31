@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+spacy
+transformers
+requests
+streamlit
