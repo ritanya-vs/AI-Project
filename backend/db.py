@@ -13,7 +13,7 @@ def initialize_database():
     # Create table if not exists
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS tickets (
-            ticket_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            Ticket ID INTEGER PRIMARY KEY AUTOINCREMENT,
             priority TEXT,
             assignee TEXT,
             created_on DATE

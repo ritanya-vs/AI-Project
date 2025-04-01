@@ -1,12 +1,12 @@
 import sqlite3
 import pandas as pd
 
-def load_tickets(db_path="tickets.db"):
+def load_tickets(db_path="tickets_database.db"):
     """
     Loads ticket data from SQLite database.
     """
     conn = sqlite3.connect(db_path)
-    query = "SELECT ticket_subject, ticket_description, ticket_priority FROM tickets"
+    query = "SELECT 'Ticket Subject', 'Ticket Description', 'Ticket Priority' FROM tickets"
     df = pd.read_sql_query(query, conn)
     conn.close()
     return df
@@ -17,8 +17,8 @@ def prepare_dataset(df):
     """
     dataset = []
     for _, row in df.iterrows():
-        input_text = f"Subject: {row['ticket_subject']} | Description: {row['ticket_description']}"
-        output_text = f"Priority: {row['ticket_priority']}"
+        input_text = f"Subject: {row["'Ticket Subject'"]} | Description: {row["'Ticket Description'"]}"
+        output_text = f"Priority: {row["'Ticket Priority'"]}"
         dataset.append({"input": input_text, "output": output_text})
     return dataset
 

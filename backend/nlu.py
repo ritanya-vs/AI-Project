@@ -1,6 +1,13 @@
 import spacy
 import re
 from transformers import pipeline
+from transformers import BartForConditionalGeneration, BartTokenizer
+import torch
+
+# Load fine-tuned model
+MODEL_PATH = "fine_tuned_bart"
+tokenizer = BartTokenizer.from_pretrained(MODEL_PATH)
+model = BartForConditionalGeneration.from_pretrained(MODEL_PATH)
 
 # Load spaCy English model
 nlp = spacy.load("en_core_web_sm")
@@ -49,13 +56,16 @@ def extract_entities(query):
 
     return extracted_data
 
+
 def classify_intent(query):
     """
-    Uses transformer-based model to classify intent.
+    Uses fine-tuned BART to classify ticket priority.
     """
-    labels = ["fetch tickets", "update ticket", "delete ticket"]
-    classification = classifier(query, labels)
-    return classification["labels"][0]  # Most likely intent
+    inputs = tokenizer(query, return_tensors="pt", truncation=True, padding="max_length", max_length=512)
+    output = model.generate(**inputs)
+    decoded_output = tokenizer.decode(output[0], skip_special_tokens=True)
+    return decoded_output  # Priority classification result
+
 
 # Example usage
 if __name__ == "__main__":
