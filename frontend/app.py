@@ -1,23 +1,33 @@
 import streamlit as st
 import requests
 
-# URL for the FastAPI backend (running locally on port 8000)
-API_URL = "http://127.0.0.1:8000/process-query"
+# URL for the FastAPI backend (running locally on port 6000)
+API_URL = "http://127.0.0.1:6000/process-query"
 
 def get_filtered_tickets(query):
     """
     Sends a request to the FastAPI backend and returns the filtered tickets.
     """
     st.write("Step 2: Sending request to FastAPI backend...")
-    response = requests.post(API_URL, json={"query": query})
+    
+    # Send POST request with the user query
+    try:
+        response = requests.post(API_URL, json={"query": query})
+    except requests.exceptions.RequestException as e:
+        st.write("Step 4: Error encountered while sending request.")
+        st.error(f"Request error: {e}")
+        return {"error": str(e)}
     
     st.write("Step 3: Response received from backend")
+    
+    # Check for successful response
     if response.status_code == 200:
         st.write("Step 4: Successfully retrieved data")
-        return response.json()
+        return response.json()  # Expecting the response to be a JSON object
     else:
         st.write("Step 4: Error encountered in backend response")
-        return {"error": response.text}
+        st.error(f"Error {response.status_code}: {response.text}")
+        return {"error": f"Error {response.status_code}: {response.text}"}
 
 # Streamlit UI
 st.title("Ticket Query Processor")
@@ -32,7 +42,7 @@ if query:
     
     if "tickets" in result:
         st.write("Step 5: Displaying filtered tickets")
-        st.write(result["tickets"])
+        st.write(result["tickets"])  # Show filtered tickets
     else:
         st.write("Step 5: Error occurred")
         st.error(f"Error: {result['error']}")

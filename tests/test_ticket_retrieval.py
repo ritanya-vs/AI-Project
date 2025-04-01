@@ -1,12 +1,35 @@
-from ticket_retriever import retrieve_tickets
-from query_translator import initialize_database
+import sys
+import os
 
-def test_retrieve_tickets():
-    initialize_database()  # Ensure the database is set up
+# Add the 'backend' directory to the system path to access the query_translator module
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend")))
+
+from query_translator import generate_sql_filter, execute_query
+
+def test_ticket_retrieval():
+    # Example extracted data that would be passed to the query generation function
     extracted_data = {
         "priority": "high",
         "assignee": "John",
         "time_range": "last week"
     }
-    tickets = retrieve_tickets(extracted_data)
-    assert len(tickets) > 0  # Assuming there are matching tickets in the sample data
+
+    # Generate the SQL query based on the extracted data
+    sql_query = generate_sql_filter(extracted_data)
+    print("Generated SQL Query:", sql_query)
+
+    # Specify the correct path to the tickets.db file in the backend directory
+    db_path = os.path.join(os.path.dirname(__file__), '..', 'backend', 'tickets.db')
+
+    # Execute the query and retrieve results, passing the correct db_path
+    results = execute_query(sql_query, db_path=db_path)
+    
+    # Print the results (you can modify this based on what the expected results should be)
+    print("Query Results:", results)
+
+    # Perform assertions if needed, for example, check that there are results
+    assert len(results) > 0, "No tickets found for the given criteria"
+    print(f"Retrieved {len(results)} tickets successfully!")
+
+# Run the test
+test_ticket_retrieval()
