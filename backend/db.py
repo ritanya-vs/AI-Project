@@ -1,7 +1,7 @@
 import sqlite3
 
 # Database file
-DB_FILE = "tickets.db"
+DB_FILE = "tickets_database.db"
 
 def initialize_database():
     """

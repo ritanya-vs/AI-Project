@@ -18,8 +18,8 @@ def test_ticket_retrieval():
     sql_query = generate_sql_filter(extracted_data)
     print("Generated SQL Query:", sql_query)
 
-    # Specify the correct path to the tickets.db file in the backend directory
-    db_path = os.path.join(os.path.dirname(__file__), '..', 'backend', 'tickets.db')
+    # Specify the correct path to the tickets_database.db file in the backend directory
+    db_path = os.path.join(os.path.dirname(__file__), '..', 'backend', 'tickets_database.db')
 
     # Execute the query and retrieve results, passing the correct db_path
     results = execute_query(sql_query, db_path=db_path)

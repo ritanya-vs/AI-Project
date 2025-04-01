@@ -4,8 +4,8 @@ import os
 # Get the absolute path of the current script
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Combine with 'tickets.db' to get the full path to the database
-db_path = os.path.join(script_dir, 'tickets.db')
+# Combine with 'tickets_database.db' to get the full path to the database
+db_path = os.path.join(script_dir, 'tickets_database.db')
 
 # Connect to the database
 conn = sqlite3.connect(db_path)

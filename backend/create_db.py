@@ -1,36 +1,51 @@
 import sqlite3
-from datetime import datetime, timedelta
+import pandas as pd
 
-def create_test_database(db_path="tickets.db"):
+def insert_csv_to_sqlite(csv_file, db_file, table_name):
     try:
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        
-        # Create tickets table if it doesn't exist
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS tickets (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                priority TEXT,
-                assignee TEXT,
-                created_on TEXT
-            );
-        ''')
+        df = pd.read_csv(csv_file)
 
-        # Insert sample tickets for testing
-        cursor.executemany('''
-            INSERT INTO tickets (priority, assignee, created_on)
-            VALUES (?, ?, ?);
-        ''', [
-            ('High', 'John', (datetime.today() - timedelta(days=3)).date()),  # Last week
-            ('Medium', 'Jane', (datetime.today() - timedelta(days=5)).date()),  # Last week
-            ('Low', 'John', (datetime.today() - timedelta(days=10)).date()),  # Older than last week
-        ])
-        
+        conn = sqlite3.connect(db_file)
+        cursor = conn.cursor()
+
+        column_definitions = []
+        for column, dtype in df.dtypes.items():
+            if pd.api.types.is_integer_dtype(dtype):
+                sql_type = "INTEGER"
+            elif pd.api.types.is_float_dtype(dtype):
+                sql_type = "REAL"
+            elif pd.api.types.is_datetime64_any_dtype(dtype):
+                sql_type = "TEXT"
+            else:
+                sql_type = "TEXT"
+            column_definitions.append(f"\"{column}\" {sql_type}")
+
+        create_table_sql = f"CREATE TABLE IF NOT EXISTS \"{table_name}\" ({', '.join(column_definitions)})"
+
+        cursor.execute(create_table_sql)
+
+        df.to_sql(table_name, conn, if_exists='append', index=False)
+
         conn.commit()
         conn.close()
-        print("Database and sample data created successfully.")
-    except Exception as e:
-        print("Failed to create database or insert data:", str(e))
 
-# Call the function to create the database and sample data
-create_test_database()
+        print(f"Data from '{csv_file}' inserted into '{table_name}' in '{db_file}' successfully.")
+
+    except FileNotFoundError:
+        print(f"Error: CSV file '{csv_file}' not found.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+csv_file_path = "customer_support_tickets.csv"
+db_file_path = "tickets_database.db"
+table_name = "tickets"
+
+insert_csv_to_sqlite(csv_file_path, db_file_path, table_name)
+
+try:
+    conn = sqlite3.connect(db_file_path)
+    df_from_db = pd.read_sql_query(f"SELECT * FROM \"{table_name}\"", conn)
+    print(df_from_db.head())
+    conn.close()
+except Exception as e:
+    print(f"Error reading from the database: {e}")

@@ -35,7 +35,7 @@ def generate_sql_filter(extracted_data):
     
     return sql_query
 
-def execute_query(sql_query, db_path="tickets.db"):
+def execute_query(sql_query, db_path="tickets_database.db"):
     """
     Executes the given SQL query on the database and returns the results.
     """
