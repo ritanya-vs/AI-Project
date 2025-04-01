@@ -44,7 +44,7 @@ insert_csv_to_sqlite(csv_file_path, db_file_path, table_name)
 
 try:
     conn = sqlite3.connect(db_file_path)
-    df_from_db = pd.read_sql_query(f"SELECT * FROM \"{table_name}\"", conn)
+    df_from_db = pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
     print(df_from_db.head())
     conn.close()
 except Exception as e:
