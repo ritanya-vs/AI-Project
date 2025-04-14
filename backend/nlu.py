@@ -1,25 +1,14 @@
 import spacy
 import re
-from transformers import pipeline
-from transformers import BartForConditionalGeneration, BartTokenizer
-import torch
 
-# Load fine-tuned model
-MODEL_PATH = "fine_tuned_bart"
-tokenizer = BartTokenizer.from_pretrained(MODEL_PATH)
-model = BartForConditionalGeneration.from_pretrained(MODEL_PATH)
-
-# Load spaCy English model
+# Load spaCy English NLP model
 nlp = spacy.load("en_core_web_sm")
-
-# Pretrained transformer for NLP-based classification (alternative to spaCy)
-classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
 
 # Predefined mappings for entity extraction
 PRIORITY_KEYWORDS = {
-    "high": ["urgent", "critical", "top priority"],
-    "medium": ["normal", "moderate"],
-    "low": ["low", "minor", "non-urgent"],
+    "High": ["urgent", "critical", "top priority", "high"],
+    "Medium": ["normal", "moderate", "medium"],
+    "Low": ["low", "minor", "non-urgent"],
 }
 
 TIME_PATTERNS = {
@@ -29,49 +18,41 @@ TIME_PATTERNS = {
     "last month": r"(last month|past month)",
 }
 
+TICKET_TYPES = ["Technical issue", "Billing inquiry", "Cancellation request", "Product inquiry", "Refund request"]
+# ["bug", "feature request", "incident", "task", "change request"]
+
 def extract_entities(query):
-    """
-    Extracts priority, assignee, and time range from user query.
-    """
-    doc = nlp(query.lower())
+    doc = nlp(query)
 
-    # Initialize extracted entities
-    extracted_data = {"priority": None, "assignee": None, "time_range": None}
+    extracted_data = {"priority": None, "assignee": None, "time_range": None, "ticket_type": None}
 
-    # Step 1: Extract Named Entities (Assignee Name Detection)
+    # Extract Named Entities (Assignee Name Detection)
     for ent in doc.ents:
         if ent.label_ == "PERSON":
             extracted_data["assignee"] = ent.text.capitalize()
 
-    # Step 2: Priority Extraction (Rule-based Matching)
-    for word in query.split():
-        for priority, synonyms in PRIORITY_KEYWORDS.items():
-            if word in synonyms or word == priority:
-                extracted_data["priority"] = priority
+    # Priority Extraction (Case-Insensitive Matching)
+    query_lower = query.lower()
+    for priority, synonyms in PRIORITY_KEYWORDS.items():
+        if any(word in query_lower.split() for word in synonyms):
+            extracted_data["priority"] = priority
+            break
 
-    # Step 3: Time Range Extraction (Regex Matching)
+    # Time Range Extraction (Regex Matching)
     for time_key, pattern in TIME_PATTERNS.items():
-        if re.search(pattern, query):
+        if re.search(pattern, query, re.IGNORECASE):
             extracted_data["time_range"] = time_key
+
+    # Ticket Type Extraction
+    for ticket_type in TICKET_TYPES:
+        if ticket_type in query_lower:
+            extracted_data["ticket_type"] = ticket_type.capitalize()
+            break
 
     return extracted_data
 
-
-def classify_intent(query):
-    """
-    Uses fine-tuned BART to classify ticket priority.
-    """
-    inputs = tokenizer(query, return_tensors="pt", truncation=True, padding="max_length", max_length=512)
-    output = model.generate(**inputs)
-    decoded_output = tokenizer.decode(output[0], skip_special_tokens=True)
-    return decoded_output  # Priority classification result
-
-
 # Example usage
 if __name__ == "__main__":
-    query = "Show me all urgent tickets assigned to John in the last week"
+    query = "Show me all urgent Technical issue tickets assigned to John"
     extracted_info = extract_entities(query)
-    intent = classify_intent(query)
-
     print("Extracted Information:", extracted_info)
-    print("Detected Intent:", intent)

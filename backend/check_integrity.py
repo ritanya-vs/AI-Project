@@ -1,6 +1,6 @@
 import sqlite3
 
-conn = sqlite3.connect('tickets_database.db')
+conn = sqlite3.connect('tickets.db')
 cursor = conn.cursor()
 
 # Check database integrity

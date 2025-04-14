@@ -1,48 +1,40 @@
 import streamlit as st
 import requests
 
-# URL for the FastAPI backend (running locally on port 6000)
 API_URL = "http://127.0.0.1:6000/process-query"
 
-def get_filtered_tickets(query):
-    """
-    Sends a request to the FastAPI backend and returns the filtered tickets.
-    """
-    st.write("Step 2: Sending request to FastAPI backend...")
-    
-    # Send POST request with the user query
-    try:
-        response = requests.post(API_URL, json={"query": query})
-    except requests.exceptions.RequestException as e:
-        st.write("Step 4: Error encountered while sending request.")
-        st.error(f"Request error: {e}")
-        return {"error": str(e)}
-    
-    st.write("Step 3: Response received from backend")
-    
-    # Check for successful response
-    if response.status_code == 200:
-        st.write("Step 4: Successfully retrieved data")
-        return response.json()  # Expecting the response to be a JSON object
+st.set_page_config(page_title="Ticket Query App", layout="centered")
+st.title("🎫 Ticket Query System")
+st.write("Enter your query to fetch tickets from the database.")
+
+query = st.text_input("🔍 Enter your query:", placeholder="E.g., Show high priority tickets assigned to John")
+
+if st.button("Search"):
+    if not query.strip():
+        st.warning("Please enter a query before searching.")
     else:
-        st.write("Step 4: Error encountered in backend response")
-        st.error(f"Error {response.status_code}: {response.text}")
-        return {"error": f"Error {response.status_code}: {response.text}"}
-
-# Streamlit UI
-st.title("Ticket Query Processor")
-st.write("Step 1: Streamlit app started")
-
-# User input for query
-query = st.text_input("Enter your query:")
-
-if query:
-    st.write("Step 2: Query entered by user ->", query)
-    result = get_filtered_tickets(query)
-    
-    if "tickets" in result:
-        st.write("Step 5: Displaying filtered tickets")
-        st.write(result["tickets"])  # Show filtered tickets
-    else:
-        st.write("Step 5: Error occurred")
-        st.error(f"Error: {result['error']}")
+        st.info("🔄 Fetching tickets... Please wait.")
+        try:
+            response = requests.post(API_URL, json={"query": query})
+            
+            if response.status_code == 200:
+                data = response.json()
+                tickets = data.get("tickets", [])
+                
+                if tickets:
+                    st.success("✅ Tickets retrieved successfully!")
+                    st.write("### 🎟️ Filtered Tickets:")
+                    for ticket in tickets:
+                        st.write(f"**Ticket ID:** {ticket[0]}")
+                        st.write(f"**Description:** {ticket[1]}")
+                        st.write(f"**Created On:** {ticket[2]}")
+                        st.write(f"**Priority:** {ticket[3]}")
+                        st.write(f"**Type:** {ticket[4]}")
+                        st.write(f"**Assignee:** {ticket[5]}")
+                        st.markdown("---")
+                else:
+                    st.warning("⚠️ No tickets found matching your query.")
+            else:
+                st.error(f"❌ Error {response.status_code}: {response.text}")
+        except requests.exceptions.RequestException as e:
+            st.error(f"🚨 Connection error: {e}")

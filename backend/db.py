@@ -1,7 +1,7 @@
 import sqlite3
 
 # Database file
-DB_FILE = "tickets_database.db"
+DB_FILE = "tickets.db"
 
 def initialize_database():
     """
@@ -13,7 +13,7 @@ def initialize_database():
     # Create table if not exists
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS tickets (
-            Ticket ID INTEGER PRIMARY KEY AUTOINCREMENT,
+            ticket_id INTEGER PRIMARY KEY AUTOINCREMENT,
             priority TEXT,
             assignee TEXT,
             created_on DATE

@@ -3,16 +3,13 @@ from datetime import datetime, timedelta
 
 # Mapping extracted time ranges to SQL-compatible date filters
 TIME_MAPPINGS = {
-    "today": lambda: f"DATE(created_on) = '{datetime.today().date()}'",
-    "yesterday": lambda: f"DATE(created_on) = '{(datetime.today() - timedelta(days=1)).date()}'",
-    "last week": lambda: f"created_on >= '{(datetime.today() - timedelta(days=7)).date()}'",
-    "last month": lambda: f"created_on >= '{(datetime.today() - timedelta(days=30)).date()}'",
+    "today": lambda: f"DATE(Created_On) = '{datetime.today().date()}'",
+    "yesterday": lambda: f"DATE(Created_On) = '{(datetime.today() - timedelta(days=1)).date()}'",
+    "last week": lambda: f"Created_On >= '{(datetime.today() - timedelta(days=7)).date()}'",
+    "last month": lambda: f"Created_On >= '{(datetime.today() - timedelta(days=30)).date()}'",
 }
 
 def generate_sql_filter(extracted_data):
-    """
-    Converts extracted attributes into an SQL WHERE clause.
-    """
     conditions = []
 
     # Handle priority
@@ -21,24 +18,24 @@ def generate_sql_filter(extracted_data):
 
     # Handle assignee
     if extracted_data.get("assignee"):
-        conditions.append(f"assignee = '{extracted_data['assignee']}'")
+        conditions.append(f"Assignee = '{extracted_data['assignee']}'")
+
+    # Handle ticket type
+    if extracted_data.get("type"):
+        conditions.append(f"Ticket_Type = '{extracted_data['type']}'")
 
     # Handle time range
     if extracted_data.get("time_range") and extracted_data["time_range"] in TIME_MAPPINGS:
         conditions.append(TIME_MAPPINGS[extracted_data["time_range"]]())
 
-    # Combine conditions with AND
-    where_clause = " AND ".join(conditions) if conditions else "1=1"  # Default to all records
+    where_clause = " AND ".join(conditions) if conditions else "1=1"  
 
-    # Full SQL Query
-    sql_query = f"SELECT * FROM tickets WHERE {where_clause};"
+    sql_query = f"SELECT Ticket_ID, Ticket_Description, Created_On, Priority, Ticket_Type, Assignee FROM tickets WHERE {where_clause};"
     
     return sql_query
 
-def execute_query(sql_query, db_path="tickets_database.db"):
-    """
-    Executes the given SQL query on the database and returns the results.
-    """
+def execute_query(sql_query, db_path="tickets_predicted.db"):
+ 
     try:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
@@ -54,8 +51,8 @@ def execute_query(sql_query, db_path="tickets_database.db"):
 if __name__ == "__main__":
     extracted_info = {
         "priority": "high",
-        "assignee": "John",
-        "time_range": "last week"
+        "assignee": "Bob",
+        "type": "Refund request"
     }
 
     sql_query = generate_sql_filter(extracted_info)
